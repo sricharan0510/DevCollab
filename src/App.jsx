@@ -298,11 +298,13 @@ function App() {
                 </Button>
               </motion.div>
               <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
-                <Button className="bg-black text-white dark:bg-white dark:text-black hover:bg-opacity-90 dark:hover:bg-opacity-90 mr-3">
-                  Sign in
-                </Button>
                 <Button className="bg-black text-white dark:bg-white dark:text-black hover:bg-opacity-90 dark:hover:bg-opacity-90">
                   Sign in
+                </Button>
+              </motion.div>
+              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                <Button className="bg-black text-white dark:bg-white dark:text-black hover:bg-opacity-90 dark:hover:bg-opacity-90">
+                  Sign Up
                 </Button>
               </motion.div>
             </div>
