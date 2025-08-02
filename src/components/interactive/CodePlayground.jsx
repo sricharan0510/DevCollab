@@ -106,7 +106,7 @@ class DevCollabWorkspace {
   }
 
   return (
-    <motion.div 
+    <motion.div
       className="w-full max-w-4xl mx-auto bg-card border border-border rounded-lg overflow-hidden shadow-2xl"
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -124,12 +124,9 @@ class DevCollabWorkspace {
             DevCollab Playground
           </span>
         </div>
-        
+
         <div className="flex items-center space-x-2">
-          <motion.div
-            animate={{ rotate: isRunning ? 360 : 0 }}
-            transition={{ duration: 1, repeat: isRunning ? Infinity : 0, ease: "linear" }}
-          >
+          <div>
             <Button
               variant="ghost"
               size="sm"
@@ -139,8 +136,8 @@ class DevCollabWorkspace {
               <Play className="h-4 w-4 mr-1" />
               {isRunning ? 'Running...' : 'Run'}
             </Button>
-          </motion.div>
-          
+          </div>
+
           <Button
             variant="ghost"
             size="sm"
@@ -182,11 +179,10 @@ class DevCollabWorkspace {
           return (
             <motion.button
               key={tab}
-              className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
-                activeTab === tab
+              className={`flex items-center px-4 py-2 text-sm font-medium border-b-2 transition-colors ${activeTab === tab
                   ? 'border-primary text-primary bg-background'
                   : 'border-transparent text-muted-foreground hover:text-foreground hover:bg-muted/50'
-              }`}
+                }`}
               onClick={() => setActiveTab(tab)}
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -227,7 +223,7 @@ class DevCollabWorkspace {
             >
               {codeExamples[activeTab].code}
             </SyntaxHighlighter>
-            
+
             {/* Running indicator */}
             {isRunning && (
               <motion.div
