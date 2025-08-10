@@ -1,40 +1,13 @@
 import { useState, useEffect } from 'react'
+import './App.css'
 import { motion, useScroll, useTransform, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
-import {
-  Github,
-  Search,
-  FileText,
-  Users,
-  Zap,
-  Code,
-  GitBranch,
-  Download,
-  Moon,
-  Sun,
-  Menu,
-  X,
-  ChevronRight,
-  Play,
-  Star,
-  Eye,
-  GitCommit,
-  Brain,
-  Sparkles,
-  Rocket,
-  Shield,
-  Globe,
-  TrendingUp,
-  Award,
-  Clock
-} from 'lucide-react'
-import CodePlayground from './components/interactive/CodePlayground'
+import { Github, Search, FileText, Users, Zap, Code, GitBranch, Download, Moon, Sun, Menu, X, ChevronRight, Play, Star, Eye, GitCommit, Brain, Sparkles, Rocket, Shield, Globe, TrendingUp, Award, Clock } from 'lucide-react';
 import InfiniteScrollCards from './components/interactive/InfiniteScrollCards'
-import FeatureSpotlight from './components/interactive/FeatureSpotlight'
-import GitHubContributionGraph from './components/interactive/GitHubContributionGraph'
-import AIInsightsPanel from './components/interactive/AIInsightsPanel'
-import './App.css'
-
+// import CodePlayground from './components/interactive/CodePlayground'
+// import FeatureSpotlight from './components/interactive/FeatureSpotlight'
+// import GitHubContributionGraph from './components/interactive/GitHubContributionGraph'
+// import AIInsightsPanel from './components/interactive/AIInsightsPanel'
 
 function App() {
   const [isDark, setIsDark] = useState(false)
@@ -441,7 +414,7 @@ function App() {
               >
                 <Sparkles className="h-4 w-4 mr-2" />
               </motion.div>
-              Trusted by 50,000+ developers worldwide
+              Trusted by 500+ developers worldwide
               <motion.div
                 animate={{ rotate: [360, 0] }}
                 transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -556,7 +529,7 @@ function App() {
       </section>
 
       {/* Code Playground Section */}
-      <section id="playground" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      {/* <section id="playground" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <motion.div
             initial={{ opacity: 0, y: 50 }}
@@ -582,10 +555,10 @@ function App() {
             <CodePlayground isDark={isDark} />
           </motion.div>
         </div>
-      </section>
+      </section> */}
 
       {/* Feature Spotlight */}
-      <FeatureSpotlight />
+      {/* <FeatureSpotlight /> */}
 
       {/* Features Section */}
       <section id="features" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
@@ -669,7 +642,7 @@ function App() {
       </section>
 
       {/* GitHub Contribution Graph Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
+      {/* <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -742,10 +715,10 @@ function App() {
             </motion.div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* AI Insights Panel Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
+      {/* <section className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
         <div className="max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             <motion.div
@@ -850,7 +823,7 @@ function App() {
             </motion.div>
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* How It Works Section */}
       <section id="how-it-works" className="py-20 px-4 sm:px-6 lg:px-8">
