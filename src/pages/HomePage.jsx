@@ -7,9 +7,25 @@ import { Github, Search, FileText, Users, Zap, Code, GitBranch, Download, Moon, 
 import { useNavigate } from 'react-router-dom'
 
 function HomePage() {
-    const [isDark, setIsDark] = useState(false)
+    const [isDark, setIsDark] = useState(() => {
+        const savedTheme = localStorage.getItem('theme')
+        return savedTheme ? savedTheme === 'dark' : false
+    })
+    useEffect(() => {
+        if (isDark) {
+            document.documentElement.classList.add('dark')
+            localStorage.setItem('theme', 'dark')
+        } else {
+            document.documentElement.classList.remove('dark')
+            localStorage.setItem('theme', 'light')
+        }
+    }, [isDark])
+
+    const toggleTheme = () => {
+        setIsDark(prev => !prev)
+    }
+
     const [isMenuOpen, setIsMenuOpen] = useState(false)
-    const { scrollYProgress } = useScroll()
     const navigate = useNavigate()
 
     useEffect(() => {
@@ -19,10 +35,6 @@ function HomePage() {
             document.documentElement.classList.remove('dark')
         }
     }, [isDark])
-
-    const toggleTheme = () => {
-        setIsDark(!isDark)
-    }
 
     // Animation variants
     const containerVariants = {
@@ -719,7 +731,7 @@ function HomePage() {
                 </div>
             </section>
 
-            {/* reviews Section */}
+            {/* Testimonials Section */}
             <section id="reviews" className="py-20 px-4 sm:px-6 lg:px-8 bg-muted/30">
                 <div className="max-w-7xl mx-auto">
                     <motion.div
