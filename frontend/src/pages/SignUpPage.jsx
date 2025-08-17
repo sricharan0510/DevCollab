@@ -3,17 +3,73 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
-import { X, Mail, Lock, Eye, User } from 'lucide-react'
+import { X, Mail, Lock, Eye, EyeOff, User } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'sonner'
 import SocialAuthButtons from './SocialAuthButtons'
+import ApiService from '../services/api'
 
-const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
-  const [password, setPassword] = useState('')
-  const [showPassword, setShowPassword] = useState(false)
+const SignUpPage = ({ isOpen, onSwitchToSignIn }) => {
   const navigate = useNavigate()
+  const { register } = useAuth()
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    password: '',
+    confirmPassword: ''
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleInputChange = (e) => {
+    const { name, value } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+
+    if (formData.password !== formData.confirmPassword) {
+      toast.error('Passwords do not match')
+      return
+    }
+
+    if (calculatePasswordStrength(formData.password) < 3) {
+      toast.error('Password is too weak. Please choose a stronger password.')
+      return
+    }
+
+    setLoading(true)
+
+    try {
+      // Call preRegister to send OTP and store signup data
+      const result = await ApiService.preRegister({
+        name: formData.name,
+        email: formData.email,
+        password: formData.password,
+      })
+
+      if (result.success) {
+        toast.success('Verification code sent! Please check your email.')
+        // Pass all signup data to OTP page for later verification
+        navigate('/otp-verification', { state: { ...formData } })
+      } else {
+        toast.error(result.message || 'Failed to send verification code')
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to send verification code')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   const handleClose = () => {
-    navigate('/') 
+    navigate('/')
   }
 
   const handleSignInClick = () => {
@@ -30,7 +86,7 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
     return strength
   }
 
-  const passwordStrength = calculatePasswordStrength(password)
+  const passwordStrength = calculatePasswordStrength(formData.password)
 
   const getStrengthColor = () => {
     if (passwordStrength <= 1) return 'bg-red-500'
@@ -94,13 +150,22 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
             </div>
 
             {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               {/* Name */}
               <div className="space-y-2">
                 <Label htmlFor="name">Full Name</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="name" type="text" placeholder="Enter your full name" className="pl-10" />
+                  <Input
+                    id="name"
+                    name="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    className="pl-10"
+                    value={formData.name}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
@@ -109,7 +174,16 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
                   <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="email" type="email" placeholder="Enter your email" className="pl-10" />
+                  <Input
+                    id="email"
+                    name="email"
+                    type="email"
+                    placeholder="Enter your email"
+                    className="pl-10"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
+                  />
                 </div>
               </div>
 
@@ -120,11 +194,13 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
                     id="password"
+                    name="password"
                     type={showPassword ? 'text' : 'password'}
                     placeholder="Create a strong password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
+                    value={formData.password}
+                    onChange={handleInputChange}
                     className="pl-10 pr-10"
+                    required
                   />
                   <Button
                     type="button"
@@ -133,21 +209,20 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
                     className="absolute right-1 top-1 h-8 w-8 p-0"
                     onClick={() => setShowPassword(!showPassword)}
                   >
-                    <Eye className="h-4 w-4" />
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
 
-                {password && (
+                {formData.password && (
                   <div className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-xs text-muted-foreground">Password strength:</span>
-                      <span className={`text-xs font-medium ${
-                        passwordStrength <= 2
+                      <span className={`text-xs font-medium ${passwordStrength <= 2
                           ? 'text-red-500'
                           : passwordStrength <= 3
-                          ? 'text-yellow-500'
-                          : 'text-green-500'
-                      }`}>
+                            ? 'text-yellow-500'
+                            : 'text-green-500'
+                        }`}>
                         {getStrengthText()}
                       </span>
                     </div>
@@ -166,15 +241,34 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
                 <Label htmlFor="confirmPassword">Confirm Password</Label>
                 <div className="relative">
                   <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                  <Input id="confirmPassword" type="password" placeholder="Confirm your password" className="pl-10 pr-10" />
+                  <Input
+                    id="confirmPassword"
+                    name="confirmPassword"
+                    type={showConfirmPassword ? 'text' : 'password'}
+                    placeholder="Confirm your password"
+                    className="pl-10 pr-10"
+                    value={formData.confirmPassword}
+                    onChange={handleInputChange}
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1 h-8 w-8 p-0"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                  >
+                    {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  </Button>
                 </div>
               </div>
 
               <Button
-                type="button"
+                type="submit"
                 className="w-full"
+                disabled={loading}
               >
-                Create Account
+                {loading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
 
@@ -194,4 +288,4 @@ const SignInPage = ({ isOpen, onSwitchToSignIn }) => {
   )
 }
 
-export default SignInPage
+export default SignUpPage

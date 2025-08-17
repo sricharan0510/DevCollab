@@ -1,13 +1,44 @@
+import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { X, Mail, ArrowLeft } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { toast } from 'sonner'
+import ApiService from '../services/api'
 
-const ForgotPassword = ({ isOpen }) => {
-    if (!isOpen) return null
+const ForgotPassword = ({ isOpen = true }) => {
     const navigate = useNavigate()
+    const [email, setEmail] = useState('')
+    const [loading, setLoading] = useState(false)
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        
+        if (!email) {
+            toast.error('Please enter your email address')
+            return
+        }
+
+        setLoading(true)
+        try {
+            const result = await ApiService.sendPasswordReset(email)
+            
+            if (result.success) {
+                toast.success('Password reset email sent! Check your inbox.')
+                navigate('/reset-password', { state: { email } })
+            } else {
+                toast.error(result.message || 'Failed to send reset email')
+            }
+        } catch (error) {
+            toast.error(error.message || 'Failed to send reset email')
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    if (!isOpen) return null
 
     return (
         <AnimatePresence>
@@ -59,7 +90,7 @@ const ForgotPassword = ({ isOpen }) => {
                         </div>
 
                         {/* Form */}
-                        <div className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleSubmit}>
                             <div className="space-y-2">
                                 <Label htmlFor="email">Email address</Label>
                                 <div className="relative">
@@ -69,22 +100,27 @@ const ForgotPassword = ({ isOpen }) => {
                                         type="email"
                                         placeholder="Enter your email address"
                                         className="pl-10"
+                                        value={email}
+                                        onChange={(e) => setEmail(e.target.value)}
+                                        required
                                     />
                                 </div>
                             </div>
 
                             <Button
+                                type="submit"
                                 className="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-90"
+                                disabled={loading}
                             >
-                                Send reset link
+                                {loading ? 'Sending...' : 'Send reset Code'}
                             </Button>
-                        </div>
+                        </form>
 
                         {/* Help Text */}
                         <div className="p-4 bg-muted/50 rounded-lg">
                             <p className="text-sm text-muted-foreground">
-                                We'll send you an email with a link to reset your password.
-                                The link will expire in 30 minutes for security.
+                                We'll send you an email with a code to reset your password.
+                                The code will expire in 10 minutes for security.
                             </p>
                         </div>
                     </div>

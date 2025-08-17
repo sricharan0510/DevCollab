@@ -6,6 +6,8 @@ import SignUpPage from './pages/SignUpPage'
 import ForgotPassword from './pages/ForgotPassword'
 import ResetPassword from './pages/ResetPassword'
 import OTPverification from './pages/OTPverification'
+import Dashboard from './pages/Dashboard'
+import AuthCallback from './pages/AuthCallback'
 
 function App() {
   return (
@@ -17,6 +19,8 @@ function App() {
         <Route path="/forgot-password" element={<ForgotPassword isOpen={true} onClose={() => { }} />} />
         <Route path="/reset-password" element={<ResetPassword isOpen={true} onClose={() => { }} />} />
         <Route path="/otp-verification" element={<OTPverification isOpen={true} onClose={() => { }} email="user@example.com" />} />
+        <Route path="/dashboard" element={<Dashboard />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
       </Routes>
     </Router>
   )

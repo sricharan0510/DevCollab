@@ -1,14 +1,32 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
 import { X, Mail, RefreshCw, ArrowLeft } from 'lucide-react'
+import { toast } from 'sonner'
+import ApiService from '../services/api'
 
-const OTPverification = ({ isOpen, email }) => {
+
+const OTPverification = ({ isOpen = true }) => {
+  const navigate = useNavigate()
+  const location = useLocation()
+  // Get all signup data from location.state
+  const email = location.state?.email || ''
+  const name = location.state?.name || ''
+  const password = location.state?.password || ''
+
   const [otp, setOtp] = useState(['', '', '', '', '', ''])
   const [timeLeft, setTimeLeft] = useState(300) // 5 minutes
+  const [loading, setLoading] = useState(false)
+  const [resending, setResending] = useState(false)
   const inputRefs = useRef([])
-  const navigate = useNavigate()
+
+  useEffect(() => {
+    if (!email) {
+      navigate('/signup')
+      return
+    }
+  }, [email, navigate])
 
   useEffect(() => {
     if (!isOpen) return
@@ -40,6 +58,57 @@ const OTPverification = ({ isOpen, email }) => {
   const handleKeyDown = (index, e) => {
     if (e.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus()
+    }
+  }
+
+  const handleVerify = async () => {
+    const otpCode = otp.join('')
+    if (otpCode.length !== 6) {
+      toast.error('Please enter all 6 digits')
+      return
+    }
+
+    setLoading(true)
+    try {
+      // Call verifyRegistration to create user after OTP
+      const result = await ApiService.verifyRegistration({
+        email,
+        otp: otpCode
+      })
+
+      if (result.success) {
+        toast.success('Account created and email verified!')
+        navigate('/signin')
+      } else {
+        toast.error(result.message || 'Verification failed')
+      }
+    } catch (error) {
+      toast.error(error.message || 'Verification failed')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  const handleResendCode = async () => {
+    setResending(true)
+    try {
+      // Call preRegister again to resend OTP (with same signup data)
+      const result = await ApiService.preRegister({
+        name,
+        email,
+        password
+      })
+      if (result.success) {
+        toast.success('Verification code resent!')
+        setTimeLeft(300) // Reset timer
+        setOtp(['', '', '', '', '', '']) // Clear OTP
+      } else {
+        toast.error(result.message || 'Failed to resend code')
+      }
+    } catch (error) {
+      toast.error(error.message || 'Failed to resend code')
+    } finally {
+      setResending(false)
     }
   }
 
@@ -147,21 +216,21 @@ const OTPverification = ({ isOpen, email }) => {
                 type="button"
                 variant="link"
                 className="p-0 h-auto text-primary dark:text-primary-light"
-                disabled={timeLeft > 0}
-                onClick={() => alert('Resend code logic here')}
+                disabled={timeLeft > 0 || resending}
+                onClick={handleResendCode}
               >
-                <RefreshCw className="w-4 h-4 mr-1" />
-                Resend code
+                <RefreshCw className={`w-4 h-4 mr-1 ${resending ? 'animate-spin' : ''}`} />
+                {resending ? 'Sending...' : 'Resend code'}
               </Button>
             </div>
 
             <Button
               type="button"
-              className="w-full mt-6 bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white dark:text-black"
-              disabled={otp.some((d) => d === '')}
-              onClick={() => alert('Verify button clicked')}
+              className="w-full mt-6"
+              disabled={otp.some((d) => d === '') || loading}
+              onClick={handleVerify}
             >
-              Verify Email
+              {loading ? 'Verifying...' : 'Verify Email'}
             </Button>
 
             <div className="mt-6 text-center">

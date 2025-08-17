@@ -4,24 +4,73 @@ import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
 import { X, Eye, EyeOff, Lock, ArrowLeft } from 'lucide-react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { toast } from 'sonner'
+import ApiService from '../services/api'
 import '../App.css'
 
-const ResetPassword = ({ isOpen }) => {
-    if (!isOpen) return null
+const ResetPassword = ({ isOpen = true }) => {
     const navigate = useNavigate()
-
-    const [password, setPassword] = useState("")
-    const [confirmPassword, setConfirmPassword] = useState("")
+    const location = useLocation()
+    const email = location.state?.email || ''
+    
+    const [formData, setFormData] = useState({
+        otp: '',
+        password: '',
+        confirmPassword: ''
+    })
     const [showPassword, setShowPassword] = useState(false)
     const [showConfirmPassword, setShowConfirmPassword] = useState(false)
+    const [loading, setLoading] = useState(false)
+
+    const handleInputChange = (e) => {
+        const { name, value } = e.target
+        setFormData(prev => ({
+            ...prev,
+            [name]: value
+        }))
+    }
+
+    const handleSubmit = async (e) => {
+        e.preventDefault()
+        
+        if (formData.password !== formData.confirmPassword) {
+            toast.error('Passwords do not match')
+            return
+        }
+
+        if (getPasswordStrength() < 2) {
+            toast.error('Password is too weak. Please choose a stronger password.')
+            return
+        }
+
+        setLoading(true)
+        try {
+            const result = await ApiService.resetPassword({
+                email,
+                otp: formData.otp,
+                newPassword: formData.password
+            })
+            
+            if (result.success) {
+                toast.success('Password reset successfully! You can now sign in.')
+                navigate('/signin')
+            } else {
+                toast.error(result.message || 'Password reset failed')
+            }
+        } catch (error) {
+            toast.error(error.message || 'Password reset failed')
+        } finally {
+            setLoading(false)
+        }
+    }
 
     const getPasswordStrength = () => {
         let strength = 0
-        if (password.length >= 8) strength++
-        if (/[A-Z]/.test(password)) strength++
-        if (/[0-9]/.test(password)) strength++
-        if (/[^A-Za-z0-9]/.test(password)) strength++
+        if (formData.password.length >= 8) strength++
+        if (/[A-Z]/.test(formData.password)) strength++
+        if (/[0-9]/.test(formData.password)) strength++
+        if (/[^A-Za-z0-9]/.test(formData.password)) strength++
         return strength
     }
 
@@ -38,6 +87,8 @@ const ResetPassword = ({ isOpen }) => {
         if (strength === 2 || strength === 3) return "bg-yellow-500"
         if (strength >= 4) return "bg-green-500"
     }
+
+    if (!isOpen) return null
 
     return (
         <AnimatePresence>
@@ -89,7 +140,21 @@ const ResetPassword = ({ isOpen }) => {
                         </div>
 
                         {/* Form */}
-                        <div className="space-y-4">
+                        <form className="space-y-4" onSubmit={handleSubmit}>
+                            {/* OTP */}
+                            <div className="space-y-2">
+                                <Label htmlFor="otp">Reset Code (OTP)</Label>
+                                <Input
+                                    id="otp"
+                                    type="text"
+                                    placeholder="Enter the code sent to your email"
+                                    value={formData.otp}
+                                    name="otp"
+                                    onChange={handleInputChange}
+                                    required
+                                />
+                            </div>
+
                             {/* New Password */}
                             <div className="space-y-2">
                                 <Label htmlFor="password">New Password</Label>
@@ -100,8 +165,10 @@ const ResetPassword = ({ isOpen }) => {
                                         type={showPassword ? "text" : "password"}
                                         placeholder="Enter new password"
                                         className="pl-10 pr-10"
-                                        value={password}
-                                        onChange={(e) => setPassword(e.target.value)}
+                                        value={formData.password}
+                                        name="password"
+                                        onChange={handleInputChange}
+                                        required
                                     />
                                     <button
                                         type="button"
@@ -113,7 +180,7 @@ const ResetPassword = ({ isOpen }) => {
                                 </div>
 
                                 {/* Strength Meter */}
-                                {password && (
+                                {formData.password && (
                                     <div className="space-y-1 mt-2">
                                         <div className="flex items-center justify-between">
                                             <div className="w-full h-2 bg-muted rounded-full overflow-hidden">
@@ -136,7 +203,7 @@ const ResetPassword = ({ isOpen }) => {
                                             </span>
                                         </div>
                                         <div className="text-xs text-muted-foreground">
-                                            {password.length < 8 && "At least 8 characters"}
+                                            {formData.password.length < 8 && "At least 8 characters"}
                                         </div>
                                     </div>
                                 )}
@@ -152,8 +219,10 @@ const ResetPassword = ({ isOpen }) => {
                                         type={showConfirmPassword ? "text" : "password"}
                                         placeholder="Confirm new password"
                                         className="pl-10 pr-10"
-                                        value={confirmPassword}
-                                        onChange={(e) => setConfirmPassword(e.target.value)}
+                                        value={formData.confirmPassword}
+                                        name="confirmPassword"
+                                        onChange={handleInputChange}
+                                        required
                                     />
                                     <button
                                         type="button"
@@ -163,18 +232,19 @@ const ResetPassword = ({ isOpen }) => {
                                         {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                                     </button>
                                 </div>
-                                {confirmPassword && confirmPassword !== password && (
+                                {formData.confirmPassword && formData.confirmPassword !== formData.password && (
                                     <p className="text-red-500 text-sm">Passwords do not match</p>
                                 )}
                             </div>
 
                             <Button
                                 className="w-full bg-black text-white dark:bg-white dark:text-black hover:opacity-90"
-                                disabled={!password || password !== confirmPassword}
+                                disabled={loading || !formData.otp || !formData.password || formData.password !== formData.confirmPassword}
+                                type="submit"
                             >
-                                Reset Password
+                                {loading ? 'Resetting...' : 'Reset Password'}
                             </Button>
-                        </div>
+                        </form>
                     </div>
                 </motion.div>
             </div>

@@ -2,12 +2,54 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { Button } from '@/components/ui/button.jsx'
 import { Input } from '@/components/ui/input.jsx'
 import { Label } from '@/components/ui/label.jsx'
-import { X, Mail, Lock, Eye } from 'lucide-react'
+import { X, Mail, Lock, Eye, EyeOff } from 'lucide-react'
 import SocialAuthButtons from './SocialAuthButtons'
 import { useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useAuth } from '../contexts/AuthContext'
+import { toast } from 'sonner'
 
 const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
   const navigate = useNavigate()
+  const { login } = useAuth()
+  const [formData, setFormData] = useState({
+    email: '',
+    password: '',
+    rememberMe: false
+  })
+  const [showPassword, setShowPassword] = useState(false)
+  const [loading, setLoading] = useState(false)
+
+  const handleInputChange = (e) => {
+    const { name, value, type, checked } = e.target
+    setFormData(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }))
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+
+    try {
+      const result = await login({
+        email: formData.email,
+        password: formData.password
+      })
+
+      if (result.success) {
+        toast.success('Login successful!')
+        navigate('/dashboard')
+      } else {
+        toast.error(result.message || 'Login failed')
+      }
+    } catch (error) {
+      toast.error(error.message || 'Login failed')
+    } finally {
+      setLoading(false)
+    }
+  }
 
   if (!isOpen) return null
 
@@ -74,7 +116,7 @@ const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
             </div>
 
             {/* Form */}
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <div className="relative">
@@ -85,6 +127,9 @@ const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
                     type="email"
                     placeholder="Enter your email"
                     className="pl-10"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    required
                   />
                 </div>
               </div>
@@ -96,17 +141,21 @@ const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
                   <Input
                     id="password"
                     name="password"
-                    type="password"
+                    type={showPassword ? "text" : "password"}
                     placeholder="Enter your password"
                     className="pl-10 pr-10"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
                   />
                   <Button
                     type="button"
                     variant="ghost"
                     size="sm"
                     className="absolute right-1 top-1 h-8 w-8 p-0"
+                    onClick={() => setShowPassword(!showPassword)}
                   >
-                    <Eye className="h-4 w-4" />
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </Button>
                 </div>
               </div>
@@ -118,6 +167,8 @@ const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
                     name="rememberMe"
                     type="checkbox"
                     className="h-4 w-4 text-primary focus:ring-primary border-border rounded"
+                    checked={formData.rememberMe}
+                    onChange={handleInputChange}
                   />
                   <Label htmlFor="rememberMe" className="text-sm">
                     Remember me
@@ -134,10 +185,11 @@ const SignInPage = ({ isOpen = true, onSwitchToForgotPassword }) => {
               </div>
 
               <Button
-                type="button"
+                type="submit"
                 className="w-full"
+                disabled={loading}
               >
-                Sign In
+                {loading ? 'Signing In...' : 'Sign In'}
               </Button>
             </form>
 
